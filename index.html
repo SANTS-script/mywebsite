@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fil">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limang Aklat — Isang Silid, Limang Kwento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#0d1119;
+    --bg-2:#171c28;
+    --wood-1:#3b2a20;
+    --wood-2:#1e140f;
+    --paper:#f4ead9;
+    --paper-shadow:#e2d3b6;
+    --ink:#2b241c;
+    --ink-soft:#5a5142;
+    --gold:#c9a227;
+
+    --c-academic:#e2434f;
+    --c-corruption:#8a8f5c;
+    --c-loneliness:#4a6fa5;
+    --c-peer:#9b6bb3;
+    --c-anxiety:#4fae8f;
+
+    --glow: var(--gold);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% 0%, rgba(201,162,39,0.10), transparent 60%),
+      linear-gradient(180deg,var(--bg-1),var(--bg-2) 60%,#0a0d13);
+    color:var(--paper);
+    font-family:'Lora',serif;
+    overflow-x:hidden;
+    transition:background 0.8s ease;
+  }
+
+  /* ambient glow behind shelf, shifts to hovered book's color */
+  .ambient{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background: radial-gradient(600px 380px at 50% 42%, var(--glow) 0%, transparent 70%);
+    opacity:0.14;
+    transition: background-color 0.6s ease, opacity 0.6s ease;
+    z-index:0;
+  }
+
+  header{
+    position:relative;
+    z-index:1;
+    text-align:center;
+    padding:64px 20px 28px;
+  }
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--gold);
+    opacity:0.85;
+  }
+  h1{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:clamp(34px,7vw,64px);
+    margin:14px 0 10px;
+    color:var(--paper);
+    letter-spacing:0.01em;
+  }
+  h1 em{
+    font-style:italic;
+    color:var(--gold);
+  }
+  .tagline{
+    font-style:italic;
+    color:#c9c0aa;
+    font-size:16px;
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.6;
+  }
+
+  /* ================= SHELF ================= */
+  .shelf-wrap{
+    position:relative;
+    z-index:1;
+    max-width:980px;
+    margin:56px auto 20px;
+    padding:0 24px;
+  }
+  .lamp{
+    width:2px;
+    height:70px;
+    margin:0 auto;
+    background:linear-gradient(180deg, transparent, var(--gold));
+    opacity:0.5;
+  }
+  .shelf{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:18px;
+    padding:34px 26px 0;
+    flex-wrap:wrap;
+  }
+
+  .book{
+    --bc: var(--gold);
+    position:relative;
+    width:108px;
+    height:290px;
+    border-radius:4px 8px 8px 4px;
+    background:linear-gradient(115deg, var(--bc) 0%, color-mix(in srgb, var(--bc) 60%, #000) 100%);
+    box-shadow:
+      inset -6px 0 10px rgba(0,0,0,0.35),
+      inset 3px 0 0 rgba(255,255,255,0.15),
+      0 10px 18px rgba(0,0,0,0.45);
+    cursor:pointer;
+    transform:translateY(0) rotate(0deg);
+    transition: transform 0.35s cubic-bezier(.2,.9,.3,1.3), box-shadow 0.35s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding-top:22px;
+  }
+  .book:nth-child(odd){ transform: rotate(-0.6deg); }
+  .book:nth-child(even){ transform: rotate(0.6deg); }
+  .book:hover, .book:focus-visible{
+    transform:translateY(-16px) rotate(0deg) scale(1.03);
+    box-shadow:
+      inset -6px 0 10px rgba(0,0,0,0.35),
+      inset 3px 0 0 rgba(255,255,255,0.18),
+      0 22px 30px rgba(0,0,0,0.55),
+      0 0 40px color-mix(in srgb, var(--bc) 45%, transparent);
+  }
+  .book:active{ transform:translateY(-8px) scale(0.99); }
+
+  .book .ribbon{
+    position:absolute;
+    top:-2px;
+    right:16px;
+    width:14px;
+    height:46px;
+    background:var(--bc);
+    filter:brightness(0.75);
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);
+  }
+
+  .book .spine-title{
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:0.04em;
+    color:rgba(255,255,255,0.94);
+    text-shadow:0 1px 2px rgba(0,0,0,0.4);
+    margin-top:8px;
+  }
+  .book .spine-theme{
+    writing-mode:vertical-rl;
+    transform:rotate(180deg);
+    font-family:'Space Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.65);
+    margin-top:10px;
+  }
+  .book .bookmark-dot{
+    margin-top:auto;
+    margin-bottom:16px;
+    width:8px;height:8px;border-radius:50%;
+    background:#fff;
+    opacity:0.5;
+  }
+
+  .plank{
+    height:22px;
+    max-width:900px;
+    margin:0 auto;
+    background:linear-gradient(180deg, var(--wood-1), var(--wood-2));
+    border-radius:3px;
+    box-shadow:0 14px 22px rgba(0,0,0,0.55), inset 0 2px 0 rgba(255,255,255,0.07);
+  }
+  .plank-shadow{
+    height:26px;
+    max-width:840px;
+    margin:0 auto;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 72%);
+  }
+
+  .hint{
+    text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:#8b8a7c;
+    margin:26px 0 70px;
+  }
+
+  /* ================= MODAL / OPEN BOOK ================= */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(6,8,12,0.78);
+    backdrop-filter:blur(3px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.35s ease;
+  }
+  .overlay.active{ opacity:1; pointer-events:auto; }
+
+  .book-spread{
+    --bc: var(--gold);
+    position:relative;
+    width:min(880px,100%);
+    max-height:88vh;
+    overflow-y:auto;
+    background:
+      linear-gradient(180deg, var(--paper), var(--paper-shadow));
+    color:var(--ink);
+    border-radius:6px;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.6),
+      0 0 0 1px rgba(0,0,0,0.15),
+      -18px 0 30px -20px rgba(0,0,0,0.5) inset;
+    transform:scale(0.92) rotateX(6deg);
+    transition:transform 0.4s cubic-bezier(.2,.9,.25,1.2);
+    padding:0;
+  }
+  .overlay.active .book-spread{ transform:scale(1) rotateX(0deg); }
+
+  .spread-top{
+    height:8px;
+    background:var(--bc);
+  }
+  .spread-inner{
+    padding:38px 40px 30px;
+  }
+  .close-btn{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1px solid rgba(43,36,28,0.25);
+    background:rgba(255,255,255,0.5);
+    color:var(--ink);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .close-btn:hover{ background:#fff; transform:rotate(90deg); }
+
+  .spread-eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color:var(--bc);
+    filter:brightness(0.75);
+  }
+  .spread-title{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    margin:8px 0 4px;
+  }
+  .spread-sub{
+    font-style:italic;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    font-size:15px;
+  }
+  .spread-divider{
+    width:56px;height:3px;
+    background:var(--bc);
+    filter:brightness(0.8);
+    margin:0 0 24px;
+  }
+  .story p{
+    font-size:16.5px;
+    line-height:1.85;
+    margin:0 0 18px;
+    color:var(--ink);
+  }
+  .story p:first-of-type::first-letter{
+    font-family:'Playfair Display',serif;
+    font-size:52px;
+    font-weight:700;
+    float:left;
+    line-height:0.8;
+    padding:6px 8px 0 0;
+    color:var(--bc);
+    filter:brightness(0.75);
+  }
+
+  .song-panel{
+    margin-top:30px;
+    padding:20px 22px;
+    border-radius:10px;
+    background:rgba(43,36,28,0.05);
+    border:1px dashed rgba(43,36,28,0.25);
+  }
+  .song-label{
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .song-title{
+    font-family:'Playfair Display',serif;
+    font-size:20px;
+    font-weight:700;
+    margin-bottom:2px;
+  }
+  .song-note{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .song-note code{
+    background:rgba(43,36,28,0.08);
+    padding:2px 6px;
+    border-radius:4px;
+  }
+  audio{
+    width:100%;
+    accent-color:var(--bc);
+  }
+
+  @media (max-width:640px){
+    .book{ width:82px; height:230px; }
+    .spread-inner{ padding:70px 22px 26px; }
+    .shelf{ gap:12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+
+  footer{
+    position:relative;
+    z-index:1;
+    text-align:center;
+    padding:30px 20px 60px;
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    color:#6d6c60;
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient" id="ambient"></div>
+
+<header>
+  <div class="eyebrow">Limang Kwento · Limang Damdamin</div>
+  <h1>Ang <em>Silid-Aklatan</em> ng Puso</h1>
+  <p class="tagline">Limang aklat, limang kaluluwa. Pindutin ang isang aklat upang buksan ang kwento — at ang awit na kasama nito.</p>
+</header>
+
+<div class="shelf-wrap">
+  <div class="lamp"></div>
+  <div class="shelf" id="shelf"></div>
+  <div class="plank"></div>
+  <div class="plank-shadow"></div>
+  <div class="hint">Pindutin ang isang aklat para basahin</div>
+</div>
+
+<footer>gawa gamit ang HTML · CSS · JS — buksan sa Termux gamit ang <code style="color:#8b8a7c">python -m http.server</code></footer>
+
+<div class="overlay" id="overlay">
+  <div class="book-spread" id="bookSpread">
+    <button class="close-btn" id="closeBtn" aria-label="Isara">✕</button>
+    <div class="spread-top" id="spreadTop"></div>
+    <div class="spread-inner">
+      <div class="spread-eyebrow" id="spreadEyebrow"></div>
+      <h2 class="spread-title" id="spreadTitle"></h2>
+      <p class="spread-sub" id="spreadSub"></p>
+      <div class="spread-divider" id="spreadDivider"></div>
+      <div class="story" id="spreadStory"></div>
+
+      <div class="song-panel">
+        <div class="song-label">Awit ng Aklat na Ito</div>
+        <div class="song-title" id="songTitle"></div>
+        <div class="song-note">Ilagay ang MP3 file sa parehong folder ng index.html, pangalanan itong <code id="songFile"></code></div>
+        <audio controls id="audioPlayer"></audio>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const books = [
+  {
+    id:'academic',
+    theme:'Presyon sa Pag-aaral',
+    title:'Grado',
+    sub:'Isang kwento tungkol sa timbang ng pagiging pinakamagaling.',
+    color:'var(--c-academic)',
+    songTitle:'Hinga Muna',
+    songFile:'hinga-muna.mp3',
+    story:[
+      "Alas-tres ng umaga nang huling tumingin si Mikaela sa orasan bago ibinaon muli ang mukha sa mga papel na puno ng equation. Hindi na niya matandaan kung kailan huling nakatulog siya nang hindi nag-aalarma ang kanyang isip tungkol sa susunod na exam.",
+      "Sa bahay nila, ang salitang 'top of the class' ay hindi lamang parangal — ito ang kondisyon ng pagmamahal. Bawat baba ng grado ay may kasamang katahimikan sa hapag-kainan, mas mabigat kaysa sa anumang batikos.",
+      "Isang gabi, habang nakatitig sa puting papel na dapat sana'y puno na ng sagot, napansin niyang hindi na niya alam kung para kanino pa ba siya nag-aaral — para sa sarili, o para sa takot na mawalan ng halaga sa mga mata ng iba.",
+      "Walang dramatikong pagbabago. Ngunit isang gabi, bago ang huling exam, huminto siya. Isang malalim na paghinga. Hindi pa niya kailangang malutas lahat ngayong gabi. Minsan, ang pinakamahirap na tanong ay: kailan ba talaga sapat na?"
+    ]
+  },
+  {
+    id:'corruption',
+    theme:'Katiwalian sa Gobyerno',
+    title:'Tatsulok',
+    sub:'Tatlong antas. Iisang sistema. Iisang katahimikan.',
+    color:'var(--c-corruption)',
+    songTitle:'Tatsulok',
+    songFile:'tatsulok.mp3',
+    story:[
+      "May tatlong antas sa baryo nila — sabi ng matatanda, parang tatsulok: yaong nasa taas, yaong nasa gitna, at yaong nasa ibaba na siyang sumusuporta sa lahat. Si Tonyo, labindalawang taong gulang, ay laging nasa ibaba, sumasalok ng tubig-baha na dapat sana'y wala kung natapos ang proyektong flood control na binayaran na, ngunit hindi kailanman itinayo.",
+      "Sa pader ng barangay hall, may plake na may pangalan ng proyekto — 'Kumpleto: 2021.' Ngunit walang sinuman sa baryo ang nakakita ng anumang bagong istruktura. Ghost project, tawag dito ng mga nakatatanda, habang tinuturo ang bakanteng lote na dapat sana'y dike.",
+      "Tuwing eleksyon, may mga posters na bumabalik, may bagong ngiti, parehong pangako. Natutunan ni Tonyo na ang katahimikan ay minsan hindi kawalan ng boses — ito ay takot na mawalan ng trabaho ang tatay niya sa proyekto ng parehong pamilyang iyon.",
+      "Ngunit sa gabi, sa ilalim ng ilaw ng kandila dahil sa brownout na dapat sana'y wala rin, sinusulat ni Tonyo ang bawat bagay na nakikita niya sa isang lumang notebook. Hindi pa niya alam kung kailan gagamitin ang mga ito. Ngunit alam niyang may araw na darating ang tamang tanong, at kailangan niyang handa ang sagot."
+    ]
+  },
+  {
+    id:'loneliness',
+    theme:'Kalungkutan',
+    title:'Saan Ka Pupunta',
+    sub:'Isang bahay na maliwanag, ngunit walang tao.',
+    color:'var(--c-loneliness)',
+    songTitle:'Saan?',
+    songFile:'saan.mp3',
+    story:[
+      "Alas-otso ng gabi, at tanging ang ilaw ng ref ang nagbibigay-liwanag sa kusina. Alam ni Ella ang oras na iyon nang eksakto — iyon ang oras na dapat sana'y tumatawag ang nanay niya mula sa Dubai, kung hindi lamang naantala ang shift.",
+      "May grupo chat sila ng klase, laging maingay, laging may tawanan. Pero pagsapit ng gabi, kapag isa-isang naglalaho ang mga 'good night' sa screen, natitira si Ella sa katahimikan ng sarili niyang kwarto, kasama lamang ang tunog ng electric fan.",
+      "Hindi ito ang uri ng kalungkutan na may kasamang luha. Mas parang isang silid na puno ng gamit ngunit walang laman. Puno ng tao sa paligid — sa paaralan, sa social media — ngunit walang sinumang totoong nakakaalam kung ano ang nasa loob niya.",
+      "Isang gabi, sinubukan niyang sagutin ang tanong na madalas niyang iniiwasan: saan ba talaga siya kabilang? Wala pa siyang sagot. Ngunit unti-unti niyang natutunan na ang pagtatanong mismo ay unang hakbang papalayo sa katahimikan."
+    ]
+  },
+  {
+    id:'peer',
+    theme:'Peer Pressure',
+    title:'Sariling Multo',
+    sub:'Ang pinakamalakas na boses ay minsan ang sarili mong takot.',
+    color:'var(--c-peer)',
+    songTitle:'Sariling Multo',
+    songFile:'sariling-multo.mp3',
+    story:[
+      "Sa gitna ng grupo, natutunan ni Rafael na magsuot ng maskara — isang bersyon niya na mas matapang, mas 'chill,' mas kayang tumanggap ng anumang hamon. Hindi dahil gusto niya, kundi dahil mas mahirap tanggapin ang katahimikan na dulot ng pag-iisa.",
+      "'Isang beses lang,' sabi nila. Laging isang beses lang, hanggang naging dalawa, tatlo, hanggang hindi na niya matandaan kung kailan huling naramdaman niya ang sarili niyang boses sa loob ng bunton ng mga taong sinusundan niya.",
+      "Sa salamin, minsan hindi na niya nakikilala ang sariling mukha. May multo siyang kasama, sabi niya sa sarili — hindi multo ng iba, kundi ng bersyon niya na iniwan niya noong pumayag siyang sundin ang lahat maliban sa sarili niyang tinig.",
+      "Isang gabi, tumanggi siya. Simple lang — 'Ayoko na.' Walang malaking away, walang dramatikong eksena. Pero sa unang pagkakataon sa mahabang panahon, naramdaman niyang siya mismo ang nagpasya, at iyon, kahit maliit, ay sapat na para simulan ang pagbawi ng sariling boses."
+    ]
+  },
+  {
+    id:'anxiety',
+    theme:'Pagkabalisa',
+    title:'Ako Muna',
+    sub:'Bago ang lahat, huminga.',
+    color:'var(--c-anxiety)',
+    songTitle:'Ako Naman Muna',
+    songFile:'ako-naman-muna.mp3',
+    story:[
+      "Bumibilis ang tibok ng puso ni Trisha kahit walang dahilan — walang exam, walang deadline, walang away. Nakaupo lang siya sa loob ng jeep, ngunit parang paluwal-luwal ang lahat sa paligid niya, at bigla siyang nahihirapang huminga.",
+      "Sinabi niya ito minsan sa kaibigan, at ang sagot ay: 'Bakit ka pa kinakabahan? Wala namang dahilan.' Mula noon, natutunan niyang itago ang mga sandaling iyon — ang panginginig ng kamay, ang bigat sa dibdib — sa likod ng ngiti na kailangan niyang isuot.",
+      "Wala itong isang malaking sanhi. Minsan, biglaan lamang itong dumarating, tulad ng alon na walang babala. At sa mahabang panahon, akala niya siya lang ang nakakaranas nito, kaya't mas lalo niyang itinatago.",
+      "Isang araw, huminto siya sa gitna ng lahat at sinabi sa sarili: 'Ako muna.' Hindi pagiging makasarili ito — ito ang unang pagkakataon na pinili niyang bigyan ng espasyo ang sarili niyang nararamdaman, sa halip na agad itong itago. Isang paghinga. Pagkatapos, isa pa."
+    ]
+  }
+];
+
+const shelf = document.getElementById('shelf');
+const overlay = document.getElementById('overlay');
+const ambient = document.getElementById('ambient');
+const spreadTop = document.getElementById('spreadTop');
+const spreadEyebrow = document.getElementById('spreadEyebrow');
+const spreadTitle = document.getElementById('spreadTitle');
+const spreadSub = document.getElementById('spreadSub');
+const spreadDivider = document.getElementById('spreadDivider');
+const spreadStory = document.getElementById('spreadStory');
+const songTitle = document.getElementById('songTitle');
+const songFile = document.getElementById('songFile');
+const audioPlayer = document.getElementById('audioPlayer');
+const bookSpread = document.getElementById('bookSpread');
+
+books.forEach(b=>{
+  const el = document.createElement('button');
+  el.className = 'book';
+  el.style.setProperty('--bc', b.color);
+  el.setAttribute('aria-label', `Buksan ang aklat: ${b.title}`);
+  el.innerHTML = `
+    <div class="ribbon"></div>
+    <div class="spine-title">${b.title}</div>
+    <div class="spine-theme">${b.theme}</div>
+    <div class="bookmark-dot"></div>
+  `;
+  el.addEventListener('mouseenter', ()=>{
+    ambient.style.setProperty('--glow', b.color);
+    ambient.style.background = `radial-gradient(600px 380px at 50% 42%, ${b.color} 0%, transparent 70%)`;
+  });
+  el.addEventListener('click', ()=> openBook(b));
+  shelf.appendChild(el);
+});
+
+function openBook(b){
+  bookSpread.style.setProperty('--bc', b.color);
+  spreadTop.style.background = b.color;
+  spreadEyebrow.textContent = b.theme;
+  spreadTitle.textContent = b.title;
+  spreadSub.textContent = b.sub;
+  spreadDivider.style.background = b.color;
+  spreadStory.innerHTML = b.story.map(p=>`<p>${p}</p>`).join('');
+  songTitle.textContent = b.songTitle;
+  songFile.textContent = b.songFile;
+  audioPlayer.src = b.songFile;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBook(){
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+  audioPlayer.pause();
+}
+
+document.getElementById('closeBtn').addEventListener('click', closeBook);
+overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeBook(); });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeBook(); });
+</script>
+
+</body>
+</html>
